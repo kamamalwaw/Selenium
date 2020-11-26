@@ -1,0 +1,103 @@
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.keys import Keys
+import datetime
+
+driver = webdriver.Chrome(ChromeDriverManager().install())
+
+
+def open_webdriver():
+    driver.maximize_window()
+
+    driver.get("http://www.meteo.pl/")
+    driver.implicitly_wait(5)
+
+
+def close_cookie_warning():
+
+    button = driver.find_element_by_css_selector("#qc-cmp2-ui > div.qc-cmp2-footer.qc-cmp2-footer-overlay.qc-cmp2-footer-scrolled > div > button.sc-ifAKCX.doxbWB")
+    button.click()
+
+def search_window():
+    prediction_mode = driver.find_element_by_id("tab_um")
+    prediction_mode.click()
+
+    to_choise_city = driver.find_element_by_xpath('//*[@id="kon_3c_b"]/div[2]/div/table/tbody/tr[3]/td/div[2]/a')
+    to_choise_city.click()
+
+
+def skip_to_new_window(): #przejście do nowego okna
+#print(driver.title)
+
+    current_window_name = driver.current_window_handle
+    window_names = driver.window_handles
+
+    for window in window_names:
+        if window != current_window_name:
+            driver.switch_to.window(window)
+
+
+#print(driver.title)
+def ready_to_fill_city():
+#kliknięcie, aby coś wpisać
+    city_fill = driver.find_element_by_xpath('/html/body/table/tbody/tr[5]/td[2]/table/tbody/tr/td[1]/input')
+    city_fill.click()
+
+def searching_correcet_city_name():
+# Jeżeli nie znajdzie miasta:
+    while True:
+        city = input("Wpisz miasto, gdzie chcesz sprawdzić pogodę: ")
+        put_city_name = driver.find_element_by_xpath(
+        '/html/body/table/tbody/tr[5]/td[2]/table/tbody/tr/td[1]/input').send_keys(city)
+        accept_city_name = driver.find_element_by_xpath('/html/body/table/tbody/tr[5]/td[2]/table/tbody/tr/td[2]/input')
+        accept_city_name.click()
+
+        if city not in driver.page_source:
+
+            choosen_city = driver.find_element_by_xpath('/html/body/div/a')
+            choosen_city.click()
+            print("Wpisz poprawne miasto! ")
+        else:
+            break
+    return city
+
+# jak znajdzie miasto:
+def get_the_weatrher_info():
+    choosen_city = driver.find_element_by_css_selector('body > table > tbody > tr:nth-child(2) > td:nth-child(2) > a')
+    choosen_city.click()
+
+def swich_window():
+    current_window_name1 = driver.current_window_handle
+    window_names1 = driver.window_handles
+
+    #print(current_window_name1)
+    #print(window_names1)
+
+    driver.switch_to.window(window_names1[2])
+    #print(driver.title)
+
+def get_screenshot(obojetne_miasto):
+
+    data = str(datetime.date.today())
+    screenshot_name = "screenshots/" + data + obojetne_miasto + ".png"
+
+    
+    driver.save_screenshot(screenshot_name)
+
+def quit_from_driver():
+    driver.quit()
+
+def main():
+    open_webdriver()
+    close_cookie_warning()
+    search_window()
+    skip_to_new_window()
+    ready_to_fill_city()
+    miasto = searching_correcet_city_name()
+    get_the_weatrher_info()
+    swich_window()
+    get_screenshot(miasto)
+    quit_from_driver()
+
+
+main()
